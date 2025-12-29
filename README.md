@@ -1,135 +1,191 @@
-# Turborepo starter
+# ClipFlow
 
-This Turborepo starter is maintained by the Turborepo core team.
+ClipFlow is a modern video editing platform powered by AI for intelligent audio analysis. It provides seamless video editing capabilities with advanced features like voice activity detection (VAD), speech-to-text transcription, filler word removal, and automated segment classification to help creators produce cleaner, more professional content.
 
-## Using this example
+## Features
 
-Run the following command:
+- **AI-Powered Audio Analysis**: Automatic voice activity detection using Silero VAD
+- **Speech Transcription**: Optional OpenAI Whisper integration for accurate transcription
+- **Filler Word Detection**: Automatically identify and suggest removal of filler words like "um", "uh", etc.
+- **Waveform Visualization**: Interactive waveform display for precise editing
+- **Smart Segment Classification**: AI-assisted suggestions for keeping, removing, or reviewing segments
+- **Real-time Video Editor**: Web-based timeline editor with drag-and-drop functionality
+- **Responsive UI**: Modern, intuitive interface built with Next.js and Tailwind CSS
+- **Asynchronous Processing**: Background task processing with Celery and Redis
+- **Secure Authentication**: JWT-based auth with refresh token rotation
+- **File Storage**: Support for local filesystem or S3-compatible storage
 
-```sh
-npx create-turbo@latest
+## Tech Stack
+
+### Backend (`apps/api`)
+- **Framework**: FastAPI (Python 3.11+)
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Task Queue**: Celery with Redis
+- **Audio Processing**: FFmpeg, Silero VAD, OpenAI Whisper
+- **Auth**: JWT with bcrypt hashing
+- **Storage**: Local filesystem or S3-compatible
+
+### Frontend (`apps/web`)
+- **Framework**: Next.js 16 with App Router
+- **Styling**: Tailwind CSS v4 with custom theme
+- **State Management**: Zustand stores
+- **Data Fetching**: TanStack Query
+- **Forms**: React Hook Form + Zod validation
+- **UI Components**: Radix UI primitives
+- **Icons**: Lucide React
+
+### Monorepo Tools
+- **Build System**: Turborepo for efficient monorepo management
+- **Package Manager**: pnpm (recommended) or npm/yarn
+- **TypeScript**: Full TypeScript support across the stack
+- **Linting**: ESLint with custom configurations
+- **Testing**: pytest for backend, testing-library for frontend
+
+## Prerequisites
+
+Before running ClipFlow, ensure you have the following installed:
+
+- **Docker & Docker Compose**: For containerized database, Redis, and optional backend deployment
+- **Node.js 18+**: For frontend development
+- **Python 3.11+**: For backend development (optional, can use Docker)
+- **FFmpeg**: For audio/video processing
+- **Git**: For version control
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/clipflow.git
+   cd clipflow
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   # Install monorepo dependencies (pnpm recommended)
+   pnpm install
+
+   # Or with npm
+   npm install
+
+   # Or with yarn
+   yarn install
+   ```
+
+3. **Set up environment variables**:
+   ```bash
+   # Copy environment files
+   cp apps/api/.env.example apps/api/.env
+   cp apps/web/.env.example apps/web/.env
+   ```
+
+   Edit the `.env` files with your configuration:
+   - `apps/api/.env`: Database URL, Redis URL, JWT secrets, storage settings, OpenAI API key (optional)
+   - `apps/web/.env`: API URL (defaults to `http://localhost:8000/api/v1`)
+
+## Running the Project
+
+### Quick Start (Recommended)
+
+Use Docker Compose for the full stack:
+
+```bash
+# Start all services (PostgreSQL, Redis, API, Web)
+docker-compose up -d
+
+# Or for production
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## What's inside?
+The application will be available at:
+- Frontend: http://localhost:3000
+- API: http://localhost:8000
+- API Documentation: http://localhost:8000/docs
 
-This Turborepo includes the following packages/apps:
+### Development Setup
 
-### Apps and Packages
+1. **Start the backend**:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+   Using Docker (recommended):
+   ```bash
+   # Start database and Redis
+   docker-compose up postgres redis -d
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+   # Run backend in development mode
+   cd apps/api
+   pip install -r requirements.txt
+   alembic upgrade head
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-### Utilities
+   Or locally without Docker:
+   ```bash
+   cd apps/api
+   pip install -r requirements.txt
+   # Set up PostgreSQL and Redis manually
+   alembic upgrade head
+   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   celery -A app.tasks.celery_app worker --loglevel=info
+   ```
 
-This Turborepo has some additional tools already setup for you:
+2. **Start the frontend**:
+   ```bash
+   cd apps/web
+   pnpm dev
+   # Or npm run dev / yarn dev
+   ```
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+3. **Start additional services** (if running locally):
+   ```bash
+   # In a separate terminal, start Celery worker
+   cd apps/api
+   celery -A app.tasks.celery_app worker --loglevel=info
+   ```
 
-### Build
+### Monorepo Commands
 
-To build all apps and packages, run the following command:
+Use Turborepo for efficient development:
 
-```
-cd my-turborepo
+```bash
+# Install all dependencies
+pnpm install
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
-
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+# Run development servers for all apps
 turbo dev
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+# Build all apps
+turbo build
+
+# Run tests
+turbo test
+
+# Lint code
+turbo lint
+
+# Format code
+turbo format
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## API Documentation
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+Once the backend is running, visit http://localhost:8000/docs for interactive API documentation powered by Swagger UI.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+Key endpoints:
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `GET /api/v1/projects` - List user projects
+- `POST /api/v1/projects/{id}/upload` - Upload media files
+- `POST /api/v1/analysis/media/{id}/analyze` - Start audio analysis
+- `GET /api/v1/analysis/{id}` - Get analysis results
 
-### Remote Caching
+## Contributing
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes and ensure tests pass
+4. Commit your changes: `git commit -m 'Add some feature'`
+5. Push to the branch: `git push origin feature/your-feature`
+6. Open a pull request
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## License
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+This project is licensed under the MIT License - see the LICENSE file for details.
