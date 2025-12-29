@@ -92,8 +92,12 @@ Use Docker Compose for the full stack:
 # Start all services (PostgreSQL, Redis, API, Web)
 docker-compose up -d
 
-# Or for production
-docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Run Migrations
+
+```bash
+docker exec -w /app clipflow-clipflow-api-1 alembic upgrade head
 ```
 
 The application will be available at:
